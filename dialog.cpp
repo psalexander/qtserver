@@ -102,6 +102,7 @@ void Dialog::onClickStartButton()
 void Dialog::onClickStopButton()
 {
     mLogServerEdit->append(tr("Stop server...\n"));
+    stopServer();
 }
 
 void Dialog::onNewConnection()
@@ -118,11 +119,70 @@ void Dialog::onNewConnection()
 
     connect(clientConnection, SIGNAL(disconnected()), clientConnection, SLOT(deleteLater()));
 
+    connect(clientConnection, SIGNAL(readyRead()), this, SLOT(onReadFromSocket()));
+
     mLogServerEdit->append(tr("Connected:"));
     mLogServerEdit->append(tr("Adress: %1").arg(clientConnection->peerAddress().toString()));
     mLogServerEdit->append(tr("Name: %1").arg(clientConnection->peerName()));
     mLogServerEdit->append(tr("Port: %1").arg(clientConnection->peerPort()));
 
     //clientConnection->write(block);
-    clientConnection->disconnectFromHost();
+
+    //clientConnection->disconnectFromHost();
+}
+
+void Dialog::onReadFromSocket()
+{
+    mLogServerEdit->append(tr("onReadFromSocket"));
+//    QTcpSocket *tcpSocket = (QTcpSocket*)sender();
+//    QDataStream clientReadStream(tcpSocket);
+//    QString str1;
+//    clientReadStream >> str1;
+//    mLogServerEdit->append(tr("Data1: %1").arg(str1));
+
+
+
+    qint64 bytesExpected=0;
+    QByteArray buffer;
+    QTcpSocket *tcpSocket = (QTcpSocket*)sender();
+    if (bytesExpected == 0 && tcpSocket->bytesAvailable() >= sizeof(bytesExpected)) {
+        tcpSocket->read((char *)&bytesExpected, sizeof(bytesExpected));
+        qDebug() << "Expecting:" << &bytesExpected;
+    }
+
+    if (bytesExpected > 0 && tcpSocket->bytesAvailable() > 0) {
+        QByteArray chunk = tcpSocket->read(qMin(bytesExpected, tcpSocket->bytesAvailable()));
+        buffer += chunk;
+        bytesExpected -= chunk.size();
+        qDebug() << "Received chunk of:" << chunk.size();
+        mLogServerEdit->append(tr("Data: %1").arg(buffer.data()));
+        if (bytesExpected == 0) {
+            qDebug() << "Received block of size:" << buffer.size();
+            qDebug() << "Bytes left in socket:" << tcpSocket->bytesAvailable();
+
+            //tcpSocket->deleteLater();
+            deleteLater();
+        }
+    }
+
+
+
+
+//    int next_block_size = 0;
+//    while(true) {
+//        if (!next_block_size) {
+//            if (tcpSocket->bytesAvailable() < sizeof(quint16)) { // are size data available
+//                break;
+//            }
+//            clientReadStream >> next_block_size;
+//        }
+
+//        if (tcpSocket->bytesAvailable() < next_block_size) {
+//            break;
+//        }
+//        QString str;
+//        clientReadStream >> str;
+//        mLogServerEdit->append(tr("Data: %1").arg(str));
+//        next_block_size = 0;
+//    }
 }

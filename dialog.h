@@ -39,6 +39,7 @@ public slots:
     void onClickStopButton();
 
     void onNewConnection();
+    void onReadFromSocket();
 };
 
 #endif // DIALOG_H
