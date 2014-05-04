@@ -4,6 +4,8 @@ Dialog::Dialog(QWidget *parent)
     : QDialog(parent)
 {
     initGUI();
+    QApplication::desktop()->setMouseTracking(true);
+
 }
 
 Dialog::~Dialog()
@@ -130,7 +132,8 @@ void Dialog::onNewConnection()
 
     //clientConnection->disconnectFromHost();
 }
-
+float X = 100;
+float Y = 100;
 void Dialog::onReadFromSocket()
 {
     mLogServerEdit->append(tr("onReadFromSocket"));
@@ -145,20 +148,50 @@ void Dialog::onReadFromSocket()
     qint64 bytesExpected=0;
     QByteArray buffer;
     QTcpSocket *tcpSocket = (QTcpSocket*)sender();
-    if (bytesExpected == 0 && tcpSocket->bytesAvailable() >= sizeof(bytesExpected)) {
-        tcpSocket->read((char *)&bytesExpected, sizeof(bytesExpected));
-        qDebug() << "Expecting:" << &bytesExpected;
-    }
+//    if (bytesExpected == 0 && tcpSocket->bytesAvailable() >= sizeof(bytesExpected)) {
+//        tcpSocket->read((char *)&bytesExpected, sizeof(bytesExpected));
+//        qDebug() << "Expecting:" << &bytesExpected;
+//    }
 
-    if (bytesExpected > 0 && tcpSocket->bytesAvailable() > 0) {
-        QByteArray chunk = tcpSocket->read(qMin(bytesExpected, tcpSocket->bytesAvailable()));
+    if (/*bytesExpected > 0 &&*/ tcpSocket->bytesAvailable() > 0) {
+        QByteArray chunk = tcpSocket->read(qMax(bytesExpected, tcpSocket->bytesAvailable()));
         buffer += chunk;
         bytesExpected -= chunk.size();
-        qDebug() << "Received chunk of:" << chunk.size();
+       // qDebug() << "Received chunk of:" << chunk.size();
+
+        QString res = buffer.data();
+        res = res.trimmed();
+        qDebug() << "res:" << res;
+        if(res.at(0)=='M' && res.at(res.size()-1)==';'){
+
+            QStringList ls = res.split(QRegExp("[,;]"));
+            qDebug() << "ls size:" << ls.size();
+            float x = ls.at(1).toDouble();
+            float y = ls.at(2).toDouble();
+          //  X += x;
+          //  Y += y;
+
+            QCursor::setPos (QCursor::pos().x() + x, QCursor::pos().y() + y);
+            qDebug() << tr("X: %1; Y: %2").arg(QString::number(X)).arg(QString::number(Y)) ;//"Received block of size: " << buffer.size();
+            //QMouseEvent* event = new QMouseEvent( QEvent::MouseMove, QPoint( X, Y ), Qt::NoButton, Qt::NoButton, Qt::NoModifier);
+           // QApplication::postEvent(QApplication::desktop(), event);
+        //this->mouseMoveEvent(event);
+        }else if(res.startsWith("CLICK")){
+            QTest::keyClick(QApplication::desktop(),Qt::LeftButton);
+            qDebug() << tr("CLICK!");
+//            QMouseEvent *klik = new QMouseEvent(QEvent::MouseButtonPress, QCursor::pos(), Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+//            QCoreApplication::postEvent(QApplication::desktop(), klik);
+//            QMouseEvent* klik2 = new QMouseEvent(QEvent::MouseButtonRelease, QCursor::pos(), Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+//            QCoreApplication::postEvent(QApplication::desktop(), klik2);
+        }
+
+
+
+
         mLogServerEdit->append(tr("Data: %1").arg(buffer.data()));
         if (bytesExpected == 0) {
-            qDebug() << "Received block of size:" << buffer.size();
-            qDebug() << "Bytes left in socket:" << tcpSocket->bytesAvailable();
+           // qDebug() << "Received block of size:" << buffer.size();
+           // qDebug() << "Bytes left in socket:" << tcpSocket->bytesAvailable();
 
             //tcpSocket->deleteLater();
             deleteLater();

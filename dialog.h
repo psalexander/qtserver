@@ -12,6 +12,12 @@
 #include <QNetworkSession>
 #include <QNetworkConfigurationManager>
 #include <QMessageBox>
+#include <QMouseEvent>
+#include <QEvent>
+#include <QApplication>
+#include <QDesktopWidget>
+#include <QCursor>
+#include <QtTest/QTestMouseEvent>
 
 class Dialog : public QDialog
 {
