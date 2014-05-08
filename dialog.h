@@ -17,7 +17,10 @@
 #include <QApplication>
 #include <QDesktopWidget>
 #include <QCursor>
-#include <QtTest/QTestMouseEvent>
+#include <QScreen>
+#include <X11/Xlib.h>
+#include <X11/keysym.h>
+#include <QX11Info>
 
 class Dialog : public QDialog
 {

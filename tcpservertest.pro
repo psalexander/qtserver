@@ -4,13 +4,13 @@
 #
 #-------------------------------------------------
 
-QT       += core gui network testlib
-
+QT       += core gui network
+QT += x11extras
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = tcpservertest
 TEMPLATE = app
-
+LIBS += -lX11
 
 SOURCES += main.cpp\
         dialog.cpp

@@ -66,6 +66,23 @@ void Dialog::initGUI()
     setLayout(mainLayout);
     connect(mStartServerButton, &QPushButton::clicked, this, &Dialog::onClickStartButton);
     connect(mStopServerButton, &QPushButton::clicked, this, &Dialog::onClickStopButton);
+
+    qDebug() << "Qt version:" << QT_VERSION_STR;
+
+    // APIs common to Qt 4 and Qt 5.1
+    int screen = QX11Info::appScreen();
+        qDebug() << "Screen:" << QX11Info::appScreen();
+        qDebug() << "DPI X:" << QX11Info::appDpiX(screen);
+        qDebug() << "DPI Y:" << QX11Info::appDpiY(screen);
+        qDebug() << "Root window handle:" << QX11Info::appRootWindow(screen);
+        qDebug() << "Time:" << QX11Info::appTime();
+        qDebug() << "User time:" << QX11Info::appUserTime();
+        qDebug() << "Display:" << QX11Info::display();
+
+        // Qt 5.1 APIs
+    #if QT_VERSION >= 0x050100
+        qDebug() << "XCB connection:" << QX11Info::connection();
+    #endif
 }
 
 void Dialog::startServer()
@@ -177,9 +194,44 @@ void Dialog::onReadFromSocket()
            // QApplication::postEvent(QApplication::desktop(), event);
         //this->mouseMoveEvent(event);
         }else if(res.startsWith("CLICK")){
-            QTest::keyClick(QApplication::desktop(),Qt::LeftButton);
+           // QTest::keyClick(QApplication::desktop(),Qt::LeftButton);
             qDebug() << tr("CLICK!");
-//            QMouseEvent *klik = new QMouseEvent(QEvent::MouseButtonPress, QCursor::pos(), Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+            QPointF pointF;
+            pointF.setX(QCursor::pos().x());
+            pointF.setY(QCursor::pos().y());
+
+            XEvent event;
+            memset(&event, 0x00, sizeof(event));
+            Display *display = QX11Info::display();
+            //XDefaultScreen(display);
+            //display = XOpenDisplay("0");
+
+            event.type = ButtonPress;
+            event.xbutton.button = Button1;
+            event.xbutton.same_screen = True;
+
+            XQueryPointer(display, RootWindow(display, DefaultScreen(display)), &event.xbutton.root, &event.xbutton.window, &event.xbutton.x_root, &event.xbutton.y_root, &event.xbutton.x, &event.xbutton.y, &event.xbutton.state);
+
+            event.xbutton.subwindow = event.xbutton.window;
+            while(event.xbutton.subwindow){
+                event.xbutton.window = event.xbutton.subwindow;
+                XQueryPointer(display, event.xbutton.window, &event.xbutton.root, &event.xbutton.subwindow, &event.xbutton.x_root, &event.xbutton.y_root, &event.xbutton.x, &event.xbutton.y, &event.xbutton.state);
+            }
+
+            if(XSendEvent(display, PointerWindow, True, 0xfff, &event) == 0)
+                fprintf(stderr, "Error\n");
+            XFlush(display);
+
+
+            //QWidget *w = QApplication::widgetAt(QCursor::pos());
+           // qDebug() << w;
+           // if(w != NULL){
+
+           // QMouseEvent *e = new QMouseEvent(QEvent::MouseButtonPress, pointF, Qt::RightButton, Qt::NoButton, Qt::NoModifier);
+           // QApplication::postEvent(w, e);
+            //QApplication::processEvents();
+   //         }
+            //            QMouseEvent *klik = new QMouseEvent(QEvent::MouseButtonPress, QCursor::pos(), Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
 //            QCoreApplication::postEvent(QApplication::desktop(), klik);
 //            QMouseEvent* klik2 = new QMouseEvent(QEvent::MouseButtonRelease, QCursor::pos(), Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
 //            QCoreApplication::postEvent(QApplication::desktop(), klik2);
