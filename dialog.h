@@ -20,7 +20,12 @@
 #include <QScreen>
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
+#include <X11/Xutil.h>
 #include <QX11Info>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
 class Dialog : public QDialog
 {
@@ -43,6 +48,8 @@ private:
     void initGUI();
     void startServer();
     void stopServer();
+    void mouseClick(int);
+    void mouseScroll(int);
 public slots:
     void onClickStartButton();
     void onClickStopButton();

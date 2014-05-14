@@ -89,7 +89,6 @@ void Dialog::startServer()
 {
     QNetworkConfigurationManager manager;
     if (manager.capabilities() & QNetworkConfigurationManager::NetworkSessionRequired) {
-        // Get saved network configuration
         const QString id = "DefaultNetworkConfiguration";
 
         QNetworkConfiguration config = manager.configurationFromIdentifier(id);
@@ -112,6 +111,81 @@ void Dialog::stopServer()
     tcpServer->close();
 }
 
+void Dialog::mouseClick(int button)
+{
+    Display *display = XOpenDisplay(NULL);
+
+    XEvent event;
+
+    if(display == NULL){
+        return;
+    }
+
+    memset(&event, 0x00, sizeof(event));
+
+    event.type = ButtonPress;
+    event.xbutton.button = button;
+    event.xbutton.same_screen = True;
+    event.xcrossing.focus = True;
+
+    XQueryPointer(display, RootWindow(display, DefaultScreen(display)), &event.xbutton.root, &event.xbutton.window, &event.xbutton.x_root, &event.xbutton.y_root, &event.xbutton.x, &event.xbutton.y, &event.xbutton.state);
+
+    event.xbutton.subwindow = event.xbutton.window;
+
+    while(event.xbutton.subwindow){
+        event.xbutton.window = event.xbutton.subwindow;
+        XQueryPointer(display, event.xbutton.window, &event.xbutton.root, &event.xbutton.subwindow, &event.xbutton.x_root, &event.xbutton.y_root, &event.xbutton.x, &event.xbutton.y, &event.xbutton.state);
+    }
+
+    if(XSendEvent(display, PointerWindow, True, 0xfff, &event) == 0){
+        fprintf(stderr, "Errore nell'invio dell'evento !!!\n");
+    }
+
+    XFlush(display);
+    usleep(100000);
+
+    event.type = ButtonRelease;
+    event.xbutton.state = 0x100;
+
+    if(XSendEvent(display, PointerWindow, True, 0xfff, &event) == 0){
+        fprintf(stderr, "Errore nell'invio dell'evento !!!\n");
+    }
+
+    XFlush(display);
+    XCloseDisplay(display);
+}
+
+void Dialog::mouseScroll(int button)
+{
+    Display *display = XOpenDisplay(NULL);
+    XEvent event;
+    if(display == NULL){
+        return;
+    }
+
+    memset(&event, 0x00, sizeof(event));
+
+    event.type = ButtonPress;
+    event.xbutton.button = button;
+    event.xbutton.same_screen = True;
+
+    XQueryPointer(display, RootWindow(display, DefaultScreen(display)), &event.xbutton.root, &event.xbutton.window, &event.xbutton.x_root, &event.xbutton.y_root, &event.xbutton.x, &event.xbutton.y, &event.xbutton.state);
+
+    event.xbutton.subwindow = event.xbutton.window;
+
+    while(event.xbutton.subwindow){
+        event.xbutton.window = event.xbutton.subwindow;
+        XQueryPointer(display, event.xbutton.window, &event.xbutton.root, &event.xbutton.subwindow, &event.xbutton.x_root, &event.xbutton.y_root, &event.xbutton.x, &event.xbutton.y, &event.xbutton.state);
+    }
+
+    if(XSendEvent(display, PointerWindow, True, 0xfff, &event) == 0){
+        fprintf(stderr, "Errore nell'invio dell'evento !!!\n");
+    }
+
+    XFlush(display);
+    XCloseDisplay(display);
+}
+
 void Dialog::onClickStartButton()
 {
     mLogServerEdit->append(tr("Start server...\n"));
@@ -126,31 +200,20 @@ void Dialog::onClickStopButton()
 
 void Dialog::onNewConnection()
 {
-    //QByteArray block;
-    //QDataStream out(&block, QIODevice::WriteOnly);
-    //out.setVersion(QDataStream::Qt_4_0);
-    //out << (quint16)0;
-    //out << fortunes.at(qrand() % fortunes.size());
-    //out.device()->seek(0);
-    //out << (quint16)(block.size() - sizeof(quint16));
-
     QTcpSocket *clientConnection = tcpServer->nextPendingConnection();
 
     connect(clientConnection, SIGNAL(disconnected()), clientConnection, SLOT(deleteLater()));
-
     connect(clientConnection, SIGNAL(readyRead()), this, SLOT(onReadFromSocket()));
 
     mLogServerEdit->append(tr("Connected:"));
     mLogServerEdit->append(tr("Adress: %1").arg(clientConnection->peerAddress().toString()));
     mLogServerEdit->append(tr("Name: %1").arg(clientConnection->peerName()));
     mLogServerEdit->append(tr("Port: %1").arg(clientConnection->peerPort()));
-
-    //clientConnection->write(block);
-
-    //clientConnection->disconnectFromHost();
 }
+
 float X = 100;
 float Y = 100;
+
 void Dialog::onReadFromSocket()
 {
     mLogServerEdit->append(tr("onReadFromSocket"));
@@ -182,21 +245,22 @@ void Dialog::onReadFromSocket()
         if(res.at(0)=='M' && res.at(res.size()-1)==';'){
 
             QStringList ls = res.split(QRegExp("[,;]"));
-            qDebug() << "ls size:" << ls.size();
             float x = ls.at(1).toDouble();
             float y = ls.at(2).toDouble();
           //  X += x;
           //  Y += y;
 
             QCursor::setPos (QCursor::pos().x() + x, QCursor::pos().y() + y);
-            qDebug() << tr("X: %1; Y: %2").arg(QString::number(X)).arg(QString::number(Y)) ;//"Received block of size: " << buffer.size();
+ //           qDebug() << tr("X: %1; Y: %2").arg(QString::number(X)).arg(QString::number(Y)) ;//"Received block of size: " << buffer.size();
             //QMouseEvent* event = new QMouseEvent( QEvent::MouseMove, QPoint( X, Y ), Qt::NoButton, Qt::NoButton, Qt::NoModifier);
            // QApplication::postEvent(QApplication::desktop(), event);
         //this->mouseMoveEvent(event);
         }else if(res.startsWith("CLICK")){
            // QTest::keyClick(QApplication::desktop(),Qt::LeftButton);
-            qDebug() << tr("CLICK!");
-            QPointF pointF;
+            //qDebug() << tr("CLICK!");
+            //mouseScroll(Button5);
+            mouseClick(Button1);
+  /*          QPointF pointF;
             pointF.setX(QCursor::pos().x());
             pointF.setY(QCursor::pos().y());
 
@@ -221,7 +285,7 @@ void Dialog::onReadFromSocket()
             if(XSendEvent(display, PointerWindow, True, 0xfff, &event) == 0)
                 fprintf(stderr, "Error\n");
             XFlush(display);
-
+*/
 
             //QWidget *w = QApplication::widgetAt(QCursor::pos());
            // qDebug() << w;
@@ -240,7 +304,7 @@ void Dialog::onReadFromSocket()
 
 
 
-        mLogServerEdit->append(tr("Data: %1").arg(buffer.data()));
+ //       mLogServerEdit->append(tr("Data: %1").arg(buffer.data()));
         if (bytesExpected == 0) {
            // qDebug() << "Received block of size:" << buffer.size();
            // qDebug() << "Bytes left in socket:" << tcpSocket->bytesAvailable();
@@ -271,3 +335,4 @@ void Dialog::onReadFromSocket()
 //        next_block_size = 0;
 //    }
 }
+
