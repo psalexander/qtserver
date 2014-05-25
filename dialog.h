@@ -26,6 +26,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <QPointF>
+
+#include "simulationmouseevent.h"
 
 class Dialog : public QDialog
 {

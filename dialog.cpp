@@ -216,7 +216,7 @@ float Y = 100;
 
 void Dialog::onReadFromSocket()
 {
-    mLogServerEdit->append(tr("onReadFromSocket"));
+ //   mLogServerEdit->append(tr("onReadFromSocket"));
 //    QTcpSocket *tcpSocket = (QTcpSocket*)sender();
 //    QDataStream clientReadStream(tcpSocket);
 //    QString str1;
@@ -241,25 +241,29 @@ void Dialog::onReadFromSocket()
 
         QString res = buffer.data();
         res = res.trimmed();
-        qDebug() << "res:" << res;
-        if(res.at(0)=='M' && res.at(res.size()-1)==';'){
+       // qDebug() << "res:" << res;
+        if(res.at(0)=='M' && res.at(res.size()-1)==';'){//Move
 
             QStringList ls = res.split(QRegExp("[,;]"));
             float x = ls.at(1).toDouble();
             float y = ls.at(2).toDouble();
-          //  X += x;
-          //  Y += y;
 
-            QCursor::setPos (QCursor::pos().x() + x, QCursor::pos().y() + y);
- //           qDebug() << tr("X: %1; Y: %2").arg(QString::number(X)).arg(QString::number(Y)) ;//"Received block of size: " << buffer.size();
-            //QMouseEvent* event = new QMouseEvent( QEvent::MouseMove, QPoint( X, Y ), Qt::NoButton, Qt::NoButton, Qt::NoModifier);
-           // QApplication::postEvent(QApplication::desktop(), event);
-        //this->mouseMoveEvent(event);
+            //QCursor::setPos (QCursor::pos().x() + x, QCursor::pos().y() + y);
+            SimulationMouseEvent::moveMouse(QPointF(x,y));
+
+            //qDebug() << tr("X: %1; Y: %2").arg(QString::number(X)).arg(QString::number(Y)) ;//"Received block of size: " << buffer.size();
+
+
         }else if(res.startsWith("CLICK")){
            // QTest::keyClick(QApplication::desktop(),Qt::LeftButton);
             //qDebug() << tr("CLICK!");
             //mouseScroll(Button5);
-            mouseClick(Button1);
+      //      mouseClick(Button1);
+
+            SimulationMouseEvent::leftMouseClick();
+
+
+
   /*          QPointF pointF;
             pointF.setX(QCursor::pos().x());
             pointF.setY(QCursor::pos().y());
@@ -299,17 +303,31 @@ void Dialog::onReadFromSocket()
 //            QCoreApplication::postEvent(QApplication::desktop(), klik);
 //            QMouseEvent* klik2 = new QMouseEvent(QEvent::MouseButtonRelease, QCursor::pos(), Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
 //            QCoreApplication::postEvent(QApplication::desktop(), klik2);
+        }else if(res.startsWith("RC")){//right click
+            SimulationMouseEvent::rightMouseClick();
+
+        }else if(res.startsWith("SU")){//scroll up
+            SimulationMouseEvent::upMouseScroll();
+            qDebug() << "SU";
+        }else if(res.startsWith("SD")){//scroll down
+            SimulationMouseEvent::downMouseScroll();
+            qDebug() << "SD";
+        }else if(res.startsWith("RD")){//right down
+            //qDebug() << "RD";//
+            SimulationMouseEvent::rightMouseDown();
+        }else if(res.startsWith("RU")){//right up
+           // qDebug() << "RU";
+            SimulationMouseEvent::rightMouseUp();
+        }else if(res.startsWith("LD")){//left down
+           // qDebug() << "LD";
+            SimulationMouseEvent::leftMouseDown();
+        }else if(res.startsWith("LU")){//left up
+          // qDebug() << "LU";
+            SimulationMouseEvent::leftMouseUp();
         }
 
 
-
-
- //       mLogServerEdit->append(tr("Data: %1").arg(buffer.data()));
         if (bytesExpected == 0) {
-           // qDebug() << "Received block of size:" << buffer.size();
-           // qDebug() << "Bytes left in socket:" << tcpSocket->bytesAvailable();
-
-            //tcpSocket->deleteLater();
             deleteLater();
         }
     }
@@ -331,7 +349,6 @@ void Dialog::onReadFromSocket()
 //        }
 //        QString str;
 //        clientReadStream >> str;
-//        mLogServerEdit->append(tr("Data: %1").arg(str));
 //        next_block_size = 0;
 //    }
 }
