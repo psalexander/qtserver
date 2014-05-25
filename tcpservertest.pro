@@ -13,6 +13,8 @@ TEMPLATE = app
 LIBS += -lX11
 
 SOURCES += main.cpp\
-        dialog.cpp
+        dialog.cpp \
+    simulationmouseevent.cpp
 
-HEADERS  += dialog.h
+HEADERS  += dialog.h \
+    simulationmouseevent.h
