@@ -67,6 +67,16 @@ void Dialog::initGUI()
     connect(mStartServerButton, &QPushButton::clicked, this, &Dialog::onClickStartButton);
     connect(mStopServerButton, &QPushButton::clicked, this, &Dialog::onClickStopButton);
 
+
+    player = new QMediaPlayer(this, QMediaPlayer::StreamPlayback);
+    //mainLayout->addWidget(player);
+
+    QVideoWidget* widget = new QVideoWidget;
+    widget->show();
+    player->setVideoOutput(widget);
+
+
+
     qDebug() << "Qt version:" << QT_VERSION_STR;
 
     // APIs common to Qt 4 and Qt 5.1
@@ -209,6 +219,9 @@ void Dialog::onNewConnection()
     mLogServerEdit->append(tr("Adress: %1").arg(clientConnection->peerAddress().toString()));
     mLogServerEdit->append(tr("Name: %1").arg(clientConnection->peerName()));
     mLogServerEdit->append(tr("Port: %1").arg(clientConnection->peerPort()));
+
+    player->setMedia(QMediaContent(), clientConnection);
+
 }
 
 float X = 100;
@@ -224,6 +237,7 @@ void Dialog::onReadFromSocket()
 //    mLogServerEdit->append(tr("Data1: %1").arg(str1));
 
 
+player->play();
 
     qint64 bytesExpected=0;
     QByteArray buffer;
@@ -233,6 +247,14 @@ void Dialog::onReadFromSocket()
 //        qDebug() << "Expecting:" << &bytesExpected;
 //    }
 
+    player->setMedia(QMediaContent(), tcpSocket);
+    if (tcpSocket->canReadLine()){
+        player->play();
+    }
+
+
+    //return;
+
     if (/*bytesExpected > 0 &&*/ tcpSocket->bytesAvailable() > 0) {
         QByteArray chunk = tcpSocket->read(qMax(bytesExpected, tcpSocket->bytesAvailable()));
         buffer += chunk;
@@ -241,6 +263,18 @@ void Dialog::onReadFromSocket()
 
         QString res = buffer.data();
         res = res.trimmed();
+
+        //qDebug() << "res:" << buffer;
+        qDebug() << "buffer size: " << buffer.size();
+
+//        player->setMedia(QMediaContent(), tcpSocket);
+//        if (tcpSocket->canReadLine()){
+//            player->play();
+//        }
+
+
+        return;
+
        // qDebug() << "res:" << res;
         if(res.at(0)=='M' && res.at(res.size()-1)==';'){//Move
 

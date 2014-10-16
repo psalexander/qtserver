@@ -27,6 +27,8 @@
 #include <string.h>
 #include <unistd.h>
 #include <QPointF>
+#include <QMediaPlayer>
+#include <QVideoWidget>
 
 #include "simulationmouseevent.h"
 
@@ -41,6 +43,8 @@ private:
     QPushButton *mStartServerButton;
     QPushButton *mStopServerButton;
     QTextEdit *mLogServerEdit;
+
+    QMediaPlayer *player;
 
     QTcpServer *tcpServer;
     QStringList fortunes;

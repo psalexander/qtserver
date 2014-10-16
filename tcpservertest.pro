@@ -6,6 +6,9 @@
 
 QT       += core gui network
 QT += x11extras
+QT += multimedia
+QT += multimediawidgets
+
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = tcpservertest
