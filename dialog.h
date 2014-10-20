@@ -29,6 +29,8 @@
 #include <QPointF>
 #include <QMediaPlayer>
 #include <QVideoWidget>
+#include <QMediaResource>
+#include <QMediaContent>
 
 #include "simulationmouseevent.h"
 

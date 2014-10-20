@@ -69,6 +69,7 @@ void Dialog::initGUI()
 
 
     player = new QMediaPlayer(this, QMediaPlayer::StreamPlayback);
+
     //mainLayout->addWidget(player);
 
     QVideoWidget* widget = new QVideoWidget;
@@ -220,7 +221,10 @@ void Dialog::onNewConnection()
     mLogServerEdit->append(tr("Name: %1").arg(clientConnection->peerName()));
     mLogServerEdit->append(tr("Port: %1").arg(clientConnection->peerPort()));
 
-    player->setMedia(QMediaContent(), clientConnection);
+    QMediaResource rss;
+    rss.setVideoCodec("H.264");
+    QMediaContent mc(rss);
+    player->setMedia( mc, clientConnection);
 
 }
 
